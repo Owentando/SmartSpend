@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}Catalogue Insights - SmartSpend AI{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #4c1d95, #6d28d9);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .category-progress {
+        height: 10px; border-radius: 20px; background: #e9ecef;
+    }
+    .category-progress-fill {
+        height: 100%; border-radius: 20px; background: #6d28d9;
+        transition: width 0.4s ease;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+
+    <div class="page-header">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="fas fa-chart-pie me-2"></i> Catalogue Insights</h2>
+            <p class="mb-0 opacity-75">Category & price breakdown of your {{ total_products }} products</p>
+        </div>
+        <a href="{{ url_for('store_dashboard') }}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 border-0 h-100">
+                <h5 class="mb-3"><i class="fas fa-layer-group me-2 text-primary"></i> Products per Category</h5>
+                {% for c in category_data %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-semibold small">{{ c.name }}</span>
+                            <span class="text-muted small">{{ c.count }} items</span>
+                        </div>
+                        <div class="category-progress">
+                            <div class="category-progress-fill" data-width="{{ c.pct }}"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 border-0 h-100">
+                <h5 class="mb-3"><i class="fas fa-coins me-2 text-success"></i> Average Price per Category</h5>
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        {% for c in avg_price_data %}
+                            <tr>
+                                <td class="fw-semibold small">{{ c.name }}</td>
+                                <td class="text-end text-success fw-bold small">R{{ "%.2f"|format(c.avg) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.category-progress-fill').forEach(function (bar) {
+            var w = parseFloat(bar.dataset.width) || 0;
+            bar.style.width = w + '%';
+        });
+    });
+</script>
+
+{% endblock %}

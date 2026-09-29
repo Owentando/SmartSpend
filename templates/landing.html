@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSpend AI - Student Budgeting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b1120; /* Dark Navy background */
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .eyebrow {
+            color: #8b5cf6; /* Purple accent */
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            line-height: 1.1;
+        }
+
+        p.subtitle {
+            color: #94a3b8; 
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            line-height: 1.6;
+        }
+
+        .feature-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            border: 1px solid #334155; 
+            border-radius: 50px;
+            padding: 10px 20px;
+            color: #cbd5e1; 
+            font-size: 1rem;
+            background-color: transparent;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background-color: #8b5cf6; 
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 18px 35px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-btn:hover {
+            background-color: #7c3aed; /* Darker purple on hover */
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+            .feature-badges {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <span class="eyebrow">AI-Powered Student Budgeting</span>
+        
+        <h1>Welcome to SmartSpend AI</h1>
+        
+        <p class="subtitle">
+            Tell SmartSpend AI what you need and how much you can spend. We help you budget, compare products, and save money based on price, shipping, and distance.
+        </p>
+        
+        <div class="feature-badges">
+            <div class="badge">Budget friendly</div>
+            <div class="badge">Nearby options</div>
+            <div class="badge">AI matching</div>
+        </div>
+        
+        <!-- This button should link to your Flask login route -->
+        <a href="{{ url_for('login') }}" class="cta-btn">Start Budgeting Now</a>
+    </div>
+
+</body>
+</html>

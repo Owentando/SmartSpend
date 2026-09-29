@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+SmartSpend AI - My Preferences
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-8">
+
+            <div class="card shadow">
+
+                <div class="card-body p-4">
+
+                    <h2 class="mb-4">
+                        🎯 My Budgeting Preferences
+                    </h2>
+
+                    <p class="text-muted mb-4">
+                        Tell SmartSpend AI what you like. We'll use this to give you 
+                        better recommendations based on your style and preferences.
+                    </p>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('update_preferences') }}">
+
+                        <!-- 🛡️ CSRF TOKEN -->
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Preferred Brands -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>🏷️ Preferred Brands (Food & Groceries)</strong>
+                            </label>
+                            <small class="d-block text-muted mb-2">
+                                Select brands you like. SmartSpend AI will prioritize these.
+                            </small>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Aunt Caroline" 
+                                               {% if 'Aunt Caroline' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Aunt Caroline</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Spekko"
+                                               {% if 'Spekko' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Spekko</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Golden Delight"
+                                               {% if 'Golden Delight' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Golden Delight</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Tastic"
+                                               {% if 'Tastic' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Tastic</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Sasko"
+                                               {% if 'Sasko' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Sasko</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Albany"
+                                               {% if 'Albany' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Albany</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Clover"
+                                               {% if 'Clover' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Clover</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Parmalat"
+                                               {% if 'Parmalat' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Parmalat</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Nivea"
+                                               {% if 'Nivea' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Nivea</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Colgate"
+                                               {% if 'Colgate' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Colgate</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="OMO"
+                                               {% if 'OMO' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">OMO</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Ariel"
+                                               {% if 'Ariel' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Ariel</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Casio"
+                                               {% if 'Casio' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Casio</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="brands" value="Nike"
+                                               {% if 'Nike' in preferences.brands %}checked{% endif %}>
+                                        <label class="form-check-label">Nike</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferred Colours -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>🎨 Preferred Colours (For Clothing)</strong>
+                            </label>
+                            <small class="d-block text-muted mb-2">
+                                Select colours you like. We'll show you products in these colours first.
+                            </small>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="Black"
+                                               {% if 'Black' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">⬛ Black</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="White"
+                                               {% if 'White' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">⬜ White</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="Grey"
+                                               {% if 'Grey' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">⬛ Grey</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="Blue"
+                                               {% if 'Blue' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">🔵 Blue</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="Red"
+                                               {% if 'Red' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">🔴 Red</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="colours" value="Pink"
+                                               {% if 'Pink' in preferences.colours %}checked{% endif %}>
+                                        <label class="form-check-label">🩷 Pink</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferred Stores -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>🏪 Preferred Stores</strong>
+                            </label>
+                            <small class="d-block text-muted mb-2">
+                                Select stores you trust. We'll prioritize products from these stores.
+                            </small>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Shoprite"
+                                               {% if 'Shoprite' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Shoprite</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Checkers"
+                                               {% if 'Checkers' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Checkers</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Pick n Pay"
+                                               {% if 'Pick n Pay' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Pick n Pay</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Clicks"
+                                               {% if 'Clicks' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Clicks</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Dis-Chem"
+                                               {% if 'Dis-Chem' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Dis-Chem</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Edgars"
+                                               {% if 'Edgars' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Edgars</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Mr Price"
+                                               {% if 'Mr Price' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Mr Price</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="Jet"
+                                               {% if 'Jet' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 Jet</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="CNA"
+                                               {% if 'CNA' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 CNA</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="stores" value="DUT Bookshop"
+                                               {% if 'DUT Bookshop' in preferences.stores %}checked{% endif %}>
+                                        <label class="form-check-label">🛒 DUT Bookshop</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferred Styles -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>👗 Preferred Styles</strong>
+                            </label>
+                            <small class="d-block text-muted mb-2">
+                                Tell us how you like to dress so we can suggest the right clothing items.
+                            </small>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Casual"
+                                               {% if 'Casual' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">👕 Casual</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Sporty"
+                                               {% if 'Sporty' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">🏃 Sporty</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Streetwear"
+                                               {% if 'Streetwear' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">🧢 Streetwear</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Smart"
+                                               {% if 'Smart' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">👔 Smart</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Comfortable"
+                                               {% if 'Comfortable' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">😌 Comfortable</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="styles" value="Trendy"
+                                               {% if 'Trendy' in preferences.styles %}checked{% endif %}>
+                                        <label class="form-check-label">✨ Trendy</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hobbies/Interests -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>🎯 Hobbies & Interests</strong>
+                            </label>
+                            <small class="d-block text-muted mb-2">
+                                Select your hobbies so we can suggest relevant products.
+                            </small>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Cooking"
+                                               {% if 'Cooking' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">🍳 Cooking</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Sports"
+                                               {% if 'Sports' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">⚽ Sports</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Fashion"
+                                               {% if 'Fashion' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">👗 Fashion</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Reading"
+                                               {% if 'Reading' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">📚 Reading</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Music"
+                                               {% if 'Music' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">🎵 Music</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="hobbies" value="Gaming"
+                                               {% if 'Gaming' in preferences.hobbies %}checked{% endif %}>
+                                        <label class="form-check-label">🎮 Gaming</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100">
+                            💾 Save Preferences
+                        </button>
+
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            ← Back to Dashboard
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

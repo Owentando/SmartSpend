@@ -1,0 +1,7 @@
+.env
+venv/
+nenv/
+__pycache__/
+.pytest_cache/
+*.pyc
+smartshop.db

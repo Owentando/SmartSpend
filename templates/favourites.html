@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+SmartSpend AI - My Favourites
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- BACK BUTTON -->
+    <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+
+    <h1 class="mb-4">❤️ My Favourites</h1>
+
+    {% if products %}
+
+        <div class="row g-4">
+            {% for p in products %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+
+                        <!-- IMAGE -->
+                        <div class="text-center py-3" style="height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px 12px 0 0; padding: 15px;">
+                            {% if p.image_url %}
+                                <img
+                                    src="{{ p.image_url }}"
+                                    alt="{{ p.name }}"
+                                    style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                                    onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
+                                >
+                                <div style="font-size: 60px; display: none;">{{ p['emoji'] }}</div>
+                            {% else %}
+                                <div style="font-size: 60px;">{{ p['emoji'] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-body p-4">
+
+                            <h5 class="text-center">{{ p['name'] }}</h5>
+
+                            <p class="text-center text-muted mb-2">{{ p['store'] }}</p>
+
+                            <hr>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Price</span>
+                                <strong>R{{ "%.2f"|format(p['price']) }}</strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Shipping</span>
+                                <strong>
+                                    {% if p['shipping'] == 0 %}
+                                        Free
+                                    {% else %}
+                                        R{{ "%.2f"|format(p['shipping']) }}
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Total</span>
+                                <strong class="text-success">
+                                    R{{ "%.2f"|format(p['price'] + p['shipping']) }}
+                                </strong>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <form action="{{ url_for('add_to_budget_list', product_id=p['id']) }}" method="POST">
+                                    <!-- 🛡️ CSRF TOKEN -->
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary w-100">📝 Add to Budget List</button>
+                                </form>
+                                <form action="{{ url_for('save_to_spending_plan', product_id=p['id']) }}" method="POST">
+                                    <!-- 🛡️ CSRF TOKEN -->
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success w-100">💾 Save to Budget Plan</button>
+                                </form>
+                                <form action="{{ url_for('favourite', product_id=p['id']) }}" method="POST">
+                                    <!-- 🛡️ CSRF TOKEN -->
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger w-100">❤️ Remove from Favourites</button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <div class="text-center py-5">
+            <h3>You have no favourites yet</h3>
+            <p class="text-muted">Add products to your favourites to see them here.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Start Budgeting</a>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

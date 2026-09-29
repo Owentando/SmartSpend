@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}SmartSpend AI - Budget Results{% endblock %}
+
+{% block content %}
+<style>
+    .results-toolbar {
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+    .product-results.tiles {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .product-results.list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .product-results.icons {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .result-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        box-shadow: 0 .25rem .9rem rgba(0,0,0,.06);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .result-card .product-image {
+        height: 190px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 18px;
+        position: relative;
+    }
+
+    .result-card .product-image img {
+        max-width: 100%;
+        max-height: 155px;
+        object-fit: contain;
+    }
+
+    .result-card .product-emoji {
+        font-size: 58px;
+    }
+
+    .result-card .store-badge {
+        display: inline-block;
+        background: #212529;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    /* ⭐ SALE — top-left ribbon on the product image */
+    .sale-ribbon {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: #dc3545;
+        color: #fff;
+        padding: 5px 11px;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .3px;
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.35);
+        z-index: 2;
+    }
+
+    /* ⭐ SALE — badge next to store name */
+    .sale-badge {
+        display: inline-block;
+        background: #ffc107;
+        color: #212529;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 800;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    /* ⭐ SALE — crossed-out original price */
+    .original-price {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-weight: 600;
+        margin-right: 6px;
+    }
+
+    /* ⭐ SALE — red sale price */
+    .sale-price {
+        color: #dc3545;
+        font-weight: 800;
+    }
+
+    /* ⭐ SALE — "You save" line */
+    .sale-savings {
+        font-size: .8rem;
+        color: #198754;
+        font-weight: 600;
+    }
+
+    /* ⭐ SALE — card gets an amber border when on sale */
+    .result-card.on-sale {
+        border: 2px solid #ffc107;
+        box-shadow: 0 .25rem 1rem rgba(255, 193, 7, .25);
+    }
+
+    .product-results.list .result-card {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        height: auto;
+    }
+
+    .product-results.list .product-image {
+        height: 100%;
+        min-height: 190px;
+    }
+
+    .product-results.icons .result-card {
+        text-align: center;
+        height: auto;
+    }
+
+    .product-results.icons .product-image {
+        height: 105px;
+        padding: 10px;
+    }
+
+    .product-results.icons .product-image img {
+        max-height: 75px;
+    }
+
+    .product-results.icons .product-emoji {
+        font-size: 42px;
+    }
+
+    .product-results.icons .details,
+    .product-results.icons .actions,
+    .product-results.icons .shipping-row,
+    .product-results.icons .budget-row {
+        display: none !important;
+    }
+
+    .product-results.icons .result-body {
+        padding: 12px !important;
+    }
+
+    .product-results.icons .product-name {
+        font-size: .9rem;
+        min-height: 42px;
+    }
+
+    @media (max-width: 992px) {
+        .product-results.tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .product-results.icons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 768px) {
+        .product-results.tiles,
+        .product-results.icons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .product-results.list .result-card { grid-template-columns: 1fr; }
+        .product-results.list .product-image { min-height: 170px; }
+    }
+
+    @media (max-width: 480px) {
+        .product-results.tiles,
+        .product-results.icons { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="container py-5">
+
+    <div class="text-center mb-4">
+        <span class="eyebrow">SMARTSPEND AI</span>
+        <h1 class="mt-2">Budget Results</h1>
+        <p class="text-muted mb-0">
+            Showing only products that fit within your available search budget.
+        </p>
+    </div>
+
+    <div class="card results-toolbar shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <small class="text-muted d-block">YOU SEARCHED FOR</small>
+                    <strong>{{ query if query else "Product" }}</strong>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted d-block">YOUR SEARCH BUDGET</small>
+                    <strong class="text-success">
+                        {% if budget %}R{{ "%.2f"|format(budget|float) }}{% else %}No budget specified{% endif %}
+                    </strong>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <small class="text-muted d-block">AFFORDABLE RESULTS</small>
+                    <strong>{{ products|length }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recommendation_message %}
+    <div class="alert {% if products %}alert-success{% else %}alert-warning{% endif %} shadow-sm border-0 mb-4">
+        <strong>SmartSpend AI:</strong> {{ recommendation_message }}
+    </div>
+    {% endif %}
+
+    {% if products %}
+        <div class="product-results tiles">
+            {% for product in products %}
+                {% set is_cheapest = loop.first %}
+                <div class="result-card {% if product.on_sale %}on-sale{% endif %}">
+                    <div class="product-image">
+
+                        <!-- ⭐ SALE RIBBON (top-left corner) -->
+                        {% if product.on_sale %}
+                            <span class="sale-ribbon">
+                                🏷️ {{ "%.0f"|format(product.sale_percent) }}% OFF
+                            </span>
+                        {% endif %}
+
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        {% endif %}
+                        <div class="product-emoji" {% if product.image_url %}style="display:none;"{% endif %}>{{ product.emoji or '🛍️' }}</div>
+                    </div>
+
+                    <div class="result-body p-4">
+                        <div class="text-center mb-3">
+                            <span class="store-badge">{{ product.store }}</span>
+
+                            <!-- ⭐ SALE BADGE next to store name -->
+                            {% if product.on_sale %}
+                                <span class="sale-badge">
+                                    🏷️ SALE
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="product-name fw-bold mb-2">{{ product.name }}</h5>
+
+                        <div class="details">
+                            {% if product.brand %}<small class="text-muted d-block">Brand: {{ product.brand }}</small>{% endif %}
+                            {% if product.size %}<small class="text-muted d-block">Size: {{ product.size }}</small>{% endif %}
+                            {% if product.url %}<small class="d-block mt-1"><a href="{{ product.url }}" target="_blank" rel="noopener">View retailer listing</a></small>{% endif %}
+                        </div>
+
+                        <hr>
+
+                        <!-- ⭐ PRICE ROW — shows sale price when on sale -->
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Product price</span>
+                            <strong>
+                                {% if product.on_sale %}
+                                    <span class="original-price">R{{ "%.2f"|format(product.original_price) }}</span>
+                                    <span class="sale-price">R{{ "%.2f"|format(product.price) }}</span>
+                                {% else %}
+                                    R{{ "%.2f"|format(product.price) }}
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <!-- ⭐ SALE SAVINGS LINE -->
+                        {% if product.on_sale %}
+                            <div class="mb-2">
+                                <small class="sale-savings">
+                                    ✅ You save R{{ "%.2f"|format(product.original_price - product.price) }}
+                                    vs the normal price.
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        <div class="shipping-row d-flex justify-content-between mb-2">
+                            <span>Transport</span>
+                            <strong class="{% if product.shipping == 0 %}text-success{% endif %}">
+                                {% if product.shipping == 0 %}Free{% else %}R{{ "%.2f"|format(product.shipping) }}{% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total</strong>
+                            <strong class="text-success fs-5">R{{ "%.2f"|format(product.total_price) }}</strong>
+                        </div>
+
+                        <div class="budget-row alert alert-success py-2">
+                            <small>Within your budget.
+                                {% if budget %}
+                                    You will have <strong>R{{ "%.2f"|format(budget|float - product.total_price) }}</strong> remaining.
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        {% if is_cheapest %}
+                            <div class="alert alert-warning text-center py-2">
+                                <strong>Lowest price shown</strong>
+                            </div>
+                        {% endif %}
+
+                        <div class="actions d-grid gap-2">
+                            {% if session.get('user_id') %}
+                                <form action="{{ url_for('add_to_budget_list', product_id=product.id) }}" method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary w-100">Add to Budget List</button>
+                                </form>
+                                <form action="{{ url_for('save_to_spending_plan', product_id=product.id) }}" method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success w-100">Save to Budget Plan</button>
+                                </form>
+                                <form action="{{ url_for('favourite', product_id=product.id) }}" method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger w-100">Add to Favourite ❤️</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center p-5">
+                <div style="font-size:70px;">💸</div>
+                <h3 class="mt-3">No products within your budget</h3>
+                <p class="text-muted mb-4">
+                    SmartSpend AI did not find a matching product that fits within your available budget.
+                    Products above your budget are not displayed.
+                </p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Search Again</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

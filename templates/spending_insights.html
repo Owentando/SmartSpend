@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}
+SmartSpend AI - Spending Insights
+{% endblock %}
+
+<!-- ✅ No background photo — clean solid colour -->
+{% block body_class %}bg-plain{% endblock %}
+
+{% block content %}
+
+<style>
+    
+    .insight-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5EAF2;
+        border-top: 4px solid #cbd5e1;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        padding: 24px;
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-align: center;
+    }
+    .insight-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
+    }
+
+    .insight-card-rose   { border-top-color: #E11D48; }
+    .insight-card-blue   { border-top-color: #3B82F6; }
+    .insight-card-green  { border-top-color: #10B981; }
+
+    /* ---- Icon chip ---- */
+    .insight-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+    .insight-icon-rose  { background: #FFE4E6; color: #BE123C; }
+    .insight-icon-blue  { background: #E0EDFF; color: #1D4ED8; }
+    .insight-icon-green { background: #DCFCE7; color: #166534; }
+
+    /* ---- Text styling ---- */
+    .insight-label {
+        font-size: 13px;
+        color: #6d7485;
+        font-weight: 600;
+    }
+    .insight-value {
+        font-weight: 800;
+        margin-top: 8px;
+        margin-bottom: 0;
+        font-size: 28px;
+    }
+    .insight-value-rose  { color: #BE123C; }
+    .insight-value-blue  { color: #1D4ED8; }
+    .insight-value-green { color: #166534; }
+
+    .insight-subtext {
+        font-size: 11px;
+        color: #6d7485;
+        margin-top: 4px;
+    }
+
+    /* ---- Header ---- */
+    .insights-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .insights-header .eyebrow {
+        color: #6d5dfc;
+        font-weight: 800;
+        font-size: 0.75rem;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+    .insights-header h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #172033;
+        margin-top: 8px;
+        margin-bottom: 6px;
+    }
+    .insights-header p {
+        color: #6d7485;
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    /* ---- Panel (chart / table) ---- */
+    .insight-panel {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5EAF2;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    .insight-panel h3,
+    .insight-panel h4 {
+        color: #172033;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+    .insight-panel small {
+        color: #6d7485;
+    }
+</style>
+
+
+<div class="container mt-4 mb-5">
+
+    
+    <div class="insights-header">
+        <span class="eyebrow">SMARTSPEND AI</span>
+        <h1>Spending Insights</h1>
+        <p>See where your NSFAS money has gone this month.</p>
+    </div>
+
+
+    
+    <div class="row g-4 mb-4">
+
+        <!-- Total Spent -->
+        <div class="col-md-4">
+            <div class="insight-card insight-card-rose">
+                <div class="insight-icon insight-icon-rose">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="insight-label">Total Spent</div>
+                <h2 class="insight-value insight-value-rose">
+                    R{{ "%.2f"|format(category_values|sum) }}
+                </h2>
+                <div class="insight-subtext">Across all categories</div>
+            </div>
+        </div>
+
+        <!-- Biggest Category -->
+        <div class="col-md-4">
+            <div class="insight-card insight-card-blue">
+                <div class="insight-icon insight-icon-blue">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <div class="insight-label">Biggest Category</div>
+                <h2 class="insight-value insight-value-blue">
+                    {% set max_val = category_values|max %}
+                    {% set max_idx = category_values.index(max_val) %}
+                    {% if max_val > 0 %}
+                        {{ category_labels[max_idx] }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </h2>
+                <div class="insight-subtext">
+                    {% if max_val > 0 %}
+                        R{{ "%.2f"|format(max_val) }} spent
+                    {% else %}
+                        No spending yet
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Used -->
+        <div class="col-md-4">
+            <div class="insight-card insight-card-green">
+                <div class="insight-icon insight-icon-green">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div class="insight-label">Categories Used</div>
+                <h2 class="insight-value insight-value-green">
+                    {% set used = [] %}
+                    {% for v in category_values %}
+                        {% if v > 0 %}
+                            {% set _ = used.append(v) %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ used|length }} / {{ category_values|length }}
+                </h2>
+                <div class="insight-subtext">Categories you've spent in</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    
+    <div class="insight-panel">
+
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <h3 class="mb-0">Spending by Category</h3>
+                <small>A breakdown of where your money went</small>
+            </div>
+        </div>
+
+        {% if category_values|sum > 0 %}
+            <div style="position: relative; height: 340px;">
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0 text-center py-5">
+                You haven't spent anything yet. Use the AI Shopping Assistant
+                on your dashboard and save items to your budget plan to see this chart.
+            </p>
+        {% endif %}
+
+    </div>
+
+
+    
+    {% if category_values|sum > 0 %}
+    <div class="insight-panel">
+
+        <h4 class="mb-3">Detailed Breakdown</h4>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Category</th>
+                        <th class="text-end">Amount Spent</th>
+                        <th class="text-end">% of Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total = category_values|sum %}
+                    {% for i in range(category_labels|length) %}
+                        {% set value = category_values[i] %}
+                        {% if value > 0 %}
+                        <tr>
+                            <td><strong>{{ category_labels[i] }}</strong></td>
+                            <td class="text-end">R{{ "%.2f"|format(value) }}</td>
+                            <td class="text-end">
+                                {{ "%.1f"|format(value / total * 100) }}%
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                    <tr class="table-light">
+                        <td><strong>Total</strong></td>
+                        <td class="text-end"><strong>R{{ "%.2f"|format(total) }}</strong></td>
+                        <td class="text-end"><strong>100.0%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    {% endif %}
+
+
+    
+    <div class="text-center mt-5">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+
+
+<script id="chart-data" type="application/json">
+{
+    "labels": {{ category_labels|tojson }},
+    "values": {{ category_values|tojson }}
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const canvas = document.getElementById("categoryPieChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+    const labels = chartData.labels;
+    const values = chartData.values;
+
+    const total = values.reduce(function(a, b) { return a + b; }, 0);
+    if (total <= 0) return;
+
+    new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    "rgba(25, 135, 84, 0.85)",
+                    "rgba(13, 110, 253, 0.85)",
+                    "rgba(255, 193, 7, 0.85)",
+                    "rgba(220, 53, 69, 0.85)",
+                    "rgba(111, 66, 193, 0.85)"
+                ],
+                borderColor: "#ffffff",
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "55%",
+            plugins: {
+                legend: {
+                    position: "right",
+                    labels: {
+                        padding: 16,
+                        font: { size: 13 },
+                        usePointStyle: true,
+                        pointStyle: "circle"
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const v = Number(context.parsed);
+                            const pct = total > 0
+                                ? ((v / total) * 100).toFixed(1)
+                                : "0.0";
+                            return context.label + ": R" + v.toFixed(2) + " (" + pct + "%)";
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

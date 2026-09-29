@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}
+SmartSpend AI - Sales Management
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    
+    <div class="text-center mb-4">
+        <span class="badge bg-warning text-dark mb-2">STORE MANAGER</span>
+        <h1 class="mt-2">Sales Management</h1>
+        <p class="text-muted mb-0">
+            Put products on sale for students. Discounts show on the
+            student side automatically.
+        </p>
+    </div>
+
+
+    
+    {% set on_sale_count = products|selectattr('on_sale')|list|length %}
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 p-4 rounded-4 text-center h-100">
+                <div class="text-muted">Total Products</div>
+                <h2 class="text-primary mt-2 mb-0">{{ products|length }}</h2>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 p-4 rounded-4 text-center h-100">
+                <div class="text-muted">On Sale</div>
+                <h2 class="text-warning mt-2 mb-0">{{ on_sale_count }}</h2>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 p-4 rounded-4 text-center h-100">
+                <div class="text-muted">Not on Sale</div>
+                <h2 class="text-secondary mt-2 mb-0">
+                    {{ products|length - on_sale_count }}
+                </h2>
+            </div>
+        </div>
+
+    </div>
+
+
+    
+    <div class="card shadow-sm border-0 p-4 rounded-4">
+
+        <h3 class="mb-3">All Products</h3>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Product</th>
+                        <th>Store</th>
+                        <th class="text-end">Current Price</th>
+                        <th>Status</th>
+                        <th class="text-end">Sale Price</th>
+                        <th>Ends</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for p in products %}
+
+                    <tr {% if p.on_sale %}class="table-warning"{% endif %}>
+
+                        <!-- ID -->
+                        <td class="fw-bold text-muted">#{{ p.id }}</td>
+
+                        <!-- PRODUCT — image + name + brand/size -->
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+
+                                <!-- IMAGE BOX -->
+                                <div style="
+                                    width: 72px;
+                                    height: 72px;
+                                    flex-shrink: 0;
+                                    background: #f8f9fa;
+                                    border: 1px solid #e9ecef;
+                                    border-radius: 14px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    overflow: hidden;
+                                    padding: 6px;
+                                ">
+                                    {% if p.image_url %}
+                                        <img src="{{ p.image_url }}"
+                                             alt="{{ p.name }}"
+                                             style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <span style="display:none; font-size: 32px;">{{ p.emoji or '🛍️' }}</span>
+                                    {% else %}
+                                        <span style="font-size: 32px;">{{ p.emoji or '🛍️' }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- NAME + BRAND / SIZE -->
+                                <div>
+                                    <strong style="font-size: 1.02rem;">{{ p.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if p.brand %}{{ p.brand }}{% endif %}
+                                        {% if p.size %} ({{ p.size }}){% endif %}
+                                    </small>
+                                </div>
+
+                            </div>
+                        </td>
+
+                        <!-- STORE -->
+                        <td>{{ p.store }}</td>
+
+                        <!-- CURRENT PRICE -->
+                        <td class="text-end">
+                            {% if p.on_sale %}
+                                <s class="text-muted">R{{ "%.2f"|format(p.price) }}</s>
+                            {% else %}
+                                R{{ "%.2f"|format(p.price) }}
+                            {% endif %}
+                        </td>
+
+                        <!-- STATUS BADGE -->
+                        <td>
+                            {% if p.on_sale %}
+                                <span class="badge bg-warning text-dark">
+                                    🏷️ {{ "%.0f"|format(p.discount_percent) }}% OFF
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not on Sale</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- SALE PRICE -->
+                        <td class="text-end">
+                            {% if p.on_sale %}
+                                <strong class="text-danger">
+                                    R{{ "%.2f"|format(p.sale_price) }}
+                                </strong>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- ENDS -->
+                        <td>
+                            {% if p.on_sale and p.sale_ends_at %}
+                                <small>{{ p.sale_ends_at[:10] }}</small>
+                            {% elif p.on_sale %}
+                                <small class="text-muted">Never</small>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- ACTION -->
+                        <td class="text-end">
+
+                            {% if p.on_sale %}
+
+                                <!-- REMOVE SALE -->
+                                <form method="POST"
+                                      action="{{ url_for('store_remove_sale', product_id=p.id) }}"
+                                      class="d-inline">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        Remove Sale
+                                    </button>
+                                </form>
+
+                            {% else %}
+
+                                <!-- PUT ON SALE BUTTON (modal itself is rendered below the table) -->
+                                <button type="button"
+                                        class="btn btn-sm btn-warning"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#saleModal{{ p.id }}">
+                                    Put on Sale
+                                </button>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    
+    <div class="text-center mt-5">
+        <a href="{{ url_for('store_dashboard') }}"
+           class="btn btn-outline-secondary">
+            ← Back to Manager Dashboard
+        </a>
+    </div>
+
+</div>
+
+
+
+{% for p in products %}
+    {% if not p.on_sale %}
+    <div class="modal fade"
+         id="saleModal{{ p.id }}"
+         tabindex="-1"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+
+                <form method="POST"
+                      action="{{ url_for('store_set_sale', product_id=p.id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">
+                            🏷️ Put on Sale — {{ p.name }}
+                        </h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <p class="text-muted">
+                            Current price:
+                            <strong>R{{ "%.2f"|format(p.price) }}</strong>
+                        </p>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <strong>Discount (%)</strong>
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   name="discount_percent"
+                                   min="1"
+                                   max="99"
+                                   step="1"
+                                   value="10"
+                                   required>
+                            <small class="text-muted">
+                                e.g. 20 means R{{ "%.2f"|format(p.price) }}
+                                → R{{ "%.2f"|format(p.price * 0.8) }}
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <strong>End Date (optional)</strong>
+                            </label>
+                            <input type="date"
+                                   class="form-control"
+                                   name="ends_at">
+                            <small class="text-muted">
+                                Leave blank for no expiry.
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer border-0">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="btn btn-warning">
+                            Save Sale
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% endblock %}

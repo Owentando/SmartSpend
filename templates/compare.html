@@ -1,0 +1,428 @@
+   {% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+SmartSpend AI - Compare Products
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .item-type-btn {
+        border: 2px solid #e9ecef;
+        border-radius: 14px;
+        padding: 16px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        color: #333;
+        display: block;
+    }
+    .item-type-btn:hover {
+        border-color: #1a73e8;
+        background: #eef5ff;
+        transform: translateY(-3px);
+        text-decoration: none;
+        color: #333;
+    }
+    .item-type-btn.active {
+        border-color: #1a73e8;
+        background: #eef5ff;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+    }
+    .item-type-btn .emoji {
+        font-size: 36px;
+        display: block;
+    }
+    .item-type-btn .label {
+        font-weight: 600;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .pick-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        user-select: none;
+    }
+    .pick-card:hover {
+        border-color: #1a73e8;
+        background: #f8fbff;
+    }
+    .pick-card.selected {
+        border-color: #28a745;
+        background: #eefaf1;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+    .pick-card .checkbox {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 2px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    .pick-card.selected .checkbox {
+        background: #28a745;
+        border-color: #28a745;
+    }
+    .pick-card .thumb {
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 4px;
+        flex-shrink: 0;
+    }
+    .pick-card .thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .pick-card .info {
+        flex-grow: 1;
+    }
+    .pick-card .info .name {
+        font-weight: 600;
+        font-size: 15px;
+    }
+    .pick-card .info .meta {
+        color: #666;
+        font-size: 13px;
+    }
+    .pick-card .price {
+        font-weight: bold;
+        color: #1a73e8;
+        font-size: 16px;
+        white-space: nowrap;
+    }
+
+    .sticky-bar {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        border-top: 2px solid #e9ecef;
+        padding: 16px;
+        margin: 0 -15px -15px -15px;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+        z-index: 100;
+    }
+</style>
+
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <span class="eyebrow">SMARTSPEND AI</span>
+        <h1 class="mt-2">🔍 Compare Products</h1>
+        <p class="text-muted">
+            Pick a product type, then choose 2-3 similar products to compare.
+        </p>
+    </div>
+
+    <!-- STEP 1: PICK ITEM TYPE -->
+    <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
+        <h5 class="mb-3">1️⃣ What do you want to compare?</h5>
+
+        <div class="row g-3">
+            {% for key, info in item_types.items() %}
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="{{ url_for('compare', item=key) }}"
+                   class="item-type-btn {% if selected_item == key %}active{% endif %}">
+                    {% if info.image_url %}
+                        <img src="{{ info.image_url }}"
+                             alt="{{ info.label }}"
+                             style="width: 70px; height: 70px; object-fit: contain; margin: 0 auto 6px auto; display: block;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="emoji" style="display: none;">{{ info.emoji }}</span>
+                    {% else %}
+                        <span class="emoji">{{ info.emoji }}</span>
+                    {% endif %}
+                    <span class="label">{{ info.label }}</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if selected_item and matching_products %}
+    <!-- STEP 2: PICK PRODUCTS -->
+    <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">2️⃣ Pick 2-3 {{ selected_item.title() }} products</h5>
+            <span class="badge bg-primary" id="countBadge">Selected: 0 of 3</span>
+        </div>
+
+        <p class="text-muted small mb-3">
+            💡 Click a product to select it. Click again to remove. Max 3.
+        </p>
+
+        <div id="pickList" class="d-flex flex-column gap-2 mb-3">
+            {% for p in matching_products %}
+            <div class="pick-card"
+                 data-id="{{ p.id }}"
+                 onclick="togglePick(this)">
+                <div class="checkbox">✓</div>
+                <div class="thumb">
+                    {% if p.image_url %}
+                        <img src="{{ p.image_url }}"
+                             alt="{{ p.name }}"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span style="display: none; font-size: 30px;">{{ p.emoji }}</span>
+                    {% else %}
+                        <span style="font-size: 30px;">{{ p.emoji }}</span>
+                    {% endif %}
+                </div>
+                <div class="info">
+                    <div class="name">{{ p.name }}</div>
+                    <div class="meta">
+                        {{ p.store }}
+                        {% if p.brand %} • {{ p.brand }}{% endif %}
+                        {% if p.size %} • {{ p.size }}{% endif %}
+                    </div>
+                </div>
+                <div class="price">R{{ '%.2f'|format(p.price + p.shipping) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="sticky-bar">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    Tip: select 2 or 3 products to compare them side by side.
+                </div>
+                <button class="btn btn-primary btn-lg" onclick="submitCompare()">
+                    🔍 Compare Selected
+                </button>
+            </div>
+        </div>
+    </div>
+    {% elif selected_item %}
+    <div class="alert alert-info">
+        No products found in the "{{ selected_item }}" group.
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <div style="font-size: 50px;">👆</div>
+        <p class="mb-0">Pick a product type above to get started.</p>
+    </div>
+    {% endif %}
+
+    {% if products and products|length >= 2 %}
+    <!-- STEP 3: COMPARISON TABLE -->
+    <h3 class="mb-4 mt-5">3️⃣ Comparison — {{ products|length }} products</h3>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 180px;">Feature</th>
+                    {% for p in products %}
+                        <th class="text-center">
+                            {% if loop.index0 == highlights.cheapest_index %}
+                                <span class="badge bg-success mb-1">💰 Cheapest</span>
+                            {% endif %}
+                            {{ p.name }}
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Product Image</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">
+                            {% if p.image_url %}
+                                <div style="height: 120px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 10px; padding: 8px;">
+                                    <img src="{{ p.image_url }}"
+                                         alt="{{ p.name }}"
+                                         style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div style="font-size: 50px; display: none;">{{ p.emoji }}</div>
+                                </div>
+                            {% else %}
+                                <div style="font-size: 50px;">{{ p.emoji }}</div>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Store</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">{{ p.store }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Brand</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">{{ p.brand or '-' }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Size</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">{{ p.size or '-' }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Price</strong></td>
+                    {% for p in products %}
+                        <td class="text-center {% if loop.index0 == highlights.cheapest_index %}table-success fw-bold{% endif %}">
+                            R{{ "%.2f"|format(p.price) }}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Shipping</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">
+                            {% if p.shipping == 0 %}
+                                <span class="text-success">Free</span>
+                            {% else %}
+                                R{{ "%.2f"|format(p.shipping) }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Total Cost</strong></td>
+                    {% for p in products %}
+                        <td class="text-center fw-bold {% if loop.index0 == highlights.cheapest_index %}table-success{% endif %}">
+                            R{{ "%.2f"|format(p.price + p.shipping) }}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Rating</strong></td>
+                    {% for p in products %}
+                        <td class="text-center {% if loop.index0 == highlights.best_rating_index %}table-warning{% endif %}">
+                            ⭐ {{ p.rating }}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Distance</strong></td>
+                    {% for p in products %}
+                        <td class="text-center {% if loop.index0 == highlights.closest_index %}table-info{% endif %}">
+                            📍 {{ p.distance }} km
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td><strong>Action</strong></td>
+                    {% for p in products %}
+                        <td class="text-center">
+                            <form action="{{ url_for('add_to_budget_list', product_id=p.id) }}" method="POST" class="mb-2">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-primary w-100">
+                                    📝 Add to Plan
+                                </button>
+                            </form>
+                            <form action="{{ url_for('favourite', product_id=p.id) }}" method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    ❤️ Favourite
+                                </button>
+                            </form>
+                        </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert alert-info shadow-sm border-0 mt-4">
+        <div class="d-flex align-items-start">
+            <div class="fs-2 me-3">🤖</div>
+            <div>
+                <h5 class="alert-heading mb-2">SmartSpend AI Summary</h5>
+                <ul class="mb-0">
+                    <li>
+                        💰 <strong>Cheapest:</strong>
+                        {{ products[highlights.cheapest_index].name }} at
+                        R{{ "%.2f"|format(highlights.cheapest_total) }}
+                        — save R{{ "%.2f"|format(highlights.max_savings) }} compared to the most expensive.
+                    </li>
+                    <li>
+                        ⭐ <strong>Highest rated:</strong>
+                        {{ products[highlights.best_rating_index].name }}
+                        ({{ products[highlights.best_rating_index].rating }} stars)
+                    </li>
+                    <li>
+                        📍 <strong>Closest:</strong>
+                        {{ products[highlights.closest_index].name }}
+                        ({{ products[highlights.closest_index].distance }} km)
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script>
+let picked = [];
+
+function togglePick(el) {
+    const id = parseInt(el.dataset.id);
+
+    if (el.classList.contains("selected")) {
+        el.classList.remove("selected");
+        picked = picked.filter(x => x !== id);
+    } else {
+        if (picked.length >= 3) {
+            alert("You can compare up to 3 products at a time.");
+            return;
+        }
+        el.classList.add("selected");
+        picked.push(id);
+    }
+
+    updateBadge();
+}
+
+function updateBadge() {
+    const badge = document.getElementById("countBadge");
+    if (badge) {
+        badge.textContent = "Selected: " + picked.length + " of 3";
+    }
+}
+
+function submitCompare() {
+    if (picked.length < 2) {
+        alert("Please select at least 2 products to compare.");
+        return;
+    }
+
+    const item = "{{ selected_item }}";
+    const ids = picked.join(",");
+    window.location.href = "/compare?item=" + item + "&ids=" + ids;
+}
+</script>
+
+{% endblock %}

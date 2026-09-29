@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+SmartSpend AI - Your Budget List
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- BACK BUTTON -->
+    <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="mb-0">📝 Your Budget List</h1>
+        {% if products %}
+            <a href="{{ url_for('download_budget_list_pdf') }}"
+               class="btn btn-danger"
+               title="Download your budget list as a PDF">
+                📄 Download Budget List as PDF
+            </a>
+        {% endif %}
+    </div>
+
+    {% if products %}
+
+        <div class="row">
+            
+            <!-- LEFT SIDE: BUDGET ITEMS -->
+            <div class="col-lg-8">
+
+                <div class="card shadow-sm p-4">
+
+                    {% for p in products %}
+
+                        <div class="d-flex align-items-center border-bottom py-3">
+
+                            <!-- PRODUCT IMAGE -->
+                            <div class="me-3" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; padding: 5px;">
+
+                                {% if p.image_url %}
+
+                                    <img
+                                        src="{{ p.image_url }}"
+                                        alt="{{ p.name }}"
+                                        style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                                        onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
+                                    >
+
+                                    <div style="font-size: 40px; display: none;">
+                                        {{ p['emoji'] }}
+                                    </div>
+
+                                {% else %}
+
+                                    <div style="font-size: 40px;">
+                                        {{ p['emoji'] }}
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <!-- PRODUCT INFO -->
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">{{ p['name'] }}</h5>
+                                <small class="text-muted">
+                                    {{ p['store'] }} • {{ p['category']|capitalize }}
+                                </small>
+                                <div class="mt-1 fw-bold">
+                                    R{{ "%.2f"|format(p['price']) }}
+                                </div>
+                            </div>
+
+                            
+                            <div>
+                                <form method="POST" action="{{ url_for('remove_from_budget_list', product_id=p['id']) }}">
+                                    <!-- 🛡️ CSRF TOKEN -->
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            
+            <div class="col-lg-4 mt-4 mt-lg-0">
+
+                <div class="card shadow-sm p-4">
+
+                    <h4>Budget Summary</h4>
+
+                    <hr>
+
+                    <p class="mb-2">
+                        <strong>Total Items:</strong> {{ cart_count }}
+                    </p>
+
+                    <h3 class="text-success mb-3">
+                        R{{ "%.2f"|format(cart_total) }}
+                    </h3>
+
+                    <!-- REMAINING BUDGET -->
+                    <p class="text-muted mb-1">
+                        Your Remaining Budget:
+                        <strong>
+                            R{{ "%.2f"|format(remaining_budget) }}
+                        </strong>
+                    </p>
+
+                    
+                    {% if cart_total > remaining_budget %}
+                        <div class="alert alert-danger mt-3">
+                            ⚠️ <strong>Warning:</strong> This list will exceed your remaining budget!
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success mt-3">
+                            ✅ Great! You have enough budget for this list.
+                        </div>
+                    {% endif %}
+
+                    
+                    {% if cart_total <= remaining_budget %}
+                        <form method="POST" action="{{ url_for('finalize_budget_plan') }}">
+                            <!-- 🛡️ CSRF TOKEN -->
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-success w-100 mt-3" type="submit">
+                                💾 Finalize Budget Plan
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    
+                    <a href="{{ url_for('download_budget_list_pdf') }}"
+                       class="btn btn-danger w-100 mt-3">
+                        📄 Download Budget List as PDF
+                    </a>
+
+                    
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-dark w-100 mt-2">
+                        Continue Budgeting
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        
+        <div class="empty-state text-center py-5">
+            <h3>Your budget list is empty</h3>
+            <p>Use SmartSpend AI to find great deals within your budget!</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                Start Budgeting
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

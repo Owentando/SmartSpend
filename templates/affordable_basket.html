@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+What I Can Get For My Budget - SmartSpend AI
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .basket-header {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 25px;
+        border-left: 5px solid #16a34a;
+    }
+    .basket-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #14532d;
+        margin-bottom: 6px;
+    }
+    .basket-header p {
+        color: #166534;
+        font-size: 14px;
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+    .summary-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5EAF2;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        height: 100%;
+    }
+    .summary-card .lbl {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        color: #6d7485;
+    }
+    .summary-card .val {
+        font-size: 26px;
+        font-weight: 800;
+        margin-top: 6px;
+    }
+    .val-blue  { color: #1D4ED8; }
+    .val-green { color: #166534; }
+    .val-rose  { color: #BE123C; }
+
+    .basket-item {
+        background: white;
+        border-radius: 14px;
+        border: 1px solid #E5EAF2;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .basket-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+    .basket-thumb {
+        width: 72px;
+        height: 72px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        padding: 6px;
+    }
+    .basket-thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .basket-info {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .basket-info .name {
+        font-weight: 700;
+        color: #172033;
+        margin-bottom: 2px;
+        font-size: 15px;
+    }
+    .basket-info .meta {
+        font-size: 12px;
+        color: #6d7485;
+    }
+    .basket-info .transport {
+        font-size: 12px;
+        color: #0b4a8e;
+        font-weight: 600;
+        margin-top: 3px;
+    }
+    .basket-price {
+        font-weight: 800;
+        font-size: 17px;
+        color: #166534;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="container py-5">
+
+    <div class="basket-header">
+        <h1>🧺 What I Can Get For R{{ "%.2f"|format(budget) }}</h1>
+        <p>
+            {% if area_name %}
+                Planned for <strong>{{ area_name }}</strong>. Transport is included in the total.
+            {% else %}
+                We put together a combination of items that fits your budget,
+                without going over.
+            {% endif %}
+        </p>
+    </div>
+
+    {% if basket.basket_items %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="lbl">Items</div>
+                    <div class="val val-blue">{{ basket.basket_items|length }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="lbl">Your Budget</div>
+                    <div class="val val-blue">R{{ "%.2f"|format(budget) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="lbl">Basket Total</div>
+                    <div class="val val-green">R{{ "%.2f"|format(basket.total) }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="summary-card">
+                    <div class="lbl">Remaining</div>
+                    <div class="val val-green">R{{ "%.2f"|format(basket.remaining) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            {% for item in basket.basket_items %}
+            <div class="basket-item">
+                <div class="basket-thumb">
+                    {% if item.image_url %}
+                        <img src="{{ item.image_url }}" alt="{{ item.name }}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span style="display:none; font-size: 30px;">{{ item.emoji or '🛍️' }}</span>
+                    {% else %}
+                        <span style="font-size: 30px;">{{ item.emoji or '🛍️' }}</span>
+                    {% endif %}
+                </div>
+                <div class="basket-info">
+                    <div class="name">{{ item.name }}</div>
+                    <div class="meta">
+                        {{ item.store }}
+                        {% if item.brand %} • {{ item.brand }}{% endif %}
+                        {% if item.size %} • {{ item.size }}{% endif %}
+                    </div>
+                    <div class="transport">
+                        📍 {{ "%.1f"|format(item.distance) }} km •
+                        Transport:
+                        {% if item.shipping == 0 %}
+                            <span class="text-success">Free</span>
+                        {% else %}
+                            R{{ "%.2f"|format(item.shipping) }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="basket-price">
+                    R{{ "%.2f"|format(item.total_price) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <strong style="font-size: 18px;">GRAND TOTAL</strong>
+                <strong style="font-size: 24px; color: #166534;">
+                    R{{ "%.2f"|format(basket.total) }}
+                </strong>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">You still have</span>
+                <strong class="text-success">
+                    R{{ "%.2f"|format(basket.remaining) }} left
+                </strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="text-muted">Transport</span>
+                <strong class="text-muted">
+                    Already included in the total
+                </strong>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap justify-content-center">
+            <form method="POST"
+                  action="{{ url_for('accept_affordable_basket') }}"
+                  onsubmit="return confirm('Add all {{ basket.basket_items|length }} items to your budget plan?');">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="budget" value="{{ '%.2f'|format(budget) }}">
+                <input type="hidden" name="area" value="{{ area }}">
+                <button type="submit" class="btn btn-success btn-lg px-4">
+                    ✅ Add All to My Budget Plan
+                </button>
+            </form>
+
+            <a href="{{ url_for('dashboard') }}"
+               class="btn btn-outline-secondary btn-lg px-4">
+                ← Back to Dashboard
+            </a>
+        </div>
+
+    {% else %}
+
+        <div class="text-center py-5">
+            <div style="font-size: 70px;">💸</div>
+            <h3 class="mt-3">Nothing fits R{{ "%.2f"|format(budget) }}</h3>
+            <p class="text-muted">
+                Your budget is too small for any single item in the catalogue
+                {% if area_name %}near {{ area_name }}{% endif %}.
+                Try increasing it.
+            </p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                ← Back to Dashboard
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

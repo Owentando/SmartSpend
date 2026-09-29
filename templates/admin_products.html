@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+Manage Products - Admin
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold">📦 Product Overview</h1>
+            <p class="text-muted mb-0">{{ products|length }} products available</p>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Store</th>
+                        <th>Price</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>#{{ product.id }}</td>
+                            <td>
+                                <strong>{{ product.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ product.brand }} {% if product.size %}({{ product.size }}){% endif %}</small>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ product.category }}</span></td>
+                            <td>{{ product.store }}</td>
+                            <td>R{{ "%.2f"|format(product.price) }}</td>
+                            <td>⭐ {{ product.rating }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

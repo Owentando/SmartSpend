@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}
+SmartSpend AI | Student Budgeting Assistant
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero">
+    <div class="container py-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <span class="eyebrow"><i class="bi bi-stars"></i> AI-POWERED STUDENT BUDGETING</span>
+                <h1 class="display-4 fw-bold mt-3">Welcome to SmartSpend AI</h1>
+                <p class="hero-text mx-auto mt-3" style="max-width: 600px;">
+                    Tell SmartSpend AI what you need and how much you can spend.
+                    We help you compare products based on price, shipping,
+                    distance and your preferences.
+                </p>
+                <div class="hero-pills justify-content-center mt-4">
+                    <span><i class="bi bi-currency-rand"></i> Budget friendly</span>
+                    <span><i class="bi bi-geo-alt"></i> Nearby options</span>
+                    <span><i class="bi bi-stars"></i> AI matching</span>
+                </div>
+                <a href="#how-it-works" class="btn btn-search mt-4">Start Budgeting Now</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="container py-5" id="how-it-works">
+    <div class="section-title">
+        <span class="eyebrow">SMART FEATURES</span>
+        <h2>Built for student budgets</h2>
+        <p>Compare your options before you spend your allowance.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-wallet2"></i></div>
+                <h5>Budget First</h5>
+                <p>Set your maximum budget and see products that fit your spending limit.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-geo-alt"></i></div>
+                <h5>Shop Nearby</h5>
+                <p>Set a distance range and find products close to your selected location.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="bi bi-stars"></i></div>
+                <h5>AI Matching</h5>
+                <p>SmartSpend AI ranks products according to your search and budgeting preferences.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="container pb-5" id="products">
+    <div class="section-title text-start">
+        <span class="eyebrow">POPULAR OPTIONS</span>
+        <h2>Explore our products</h2>
+        <p>Click a category below to browse different items!</p>
+    </div>
+
+    <div class="mb-4">
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('all')">All</button>
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('food')">🍎 Food</button>
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('toiletries')">🧻 Toiletries</button>
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('personal_care')">🧴 Personal Care</button>
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('clothing')">👕 Clothing</button>
+        <button type="button" class="btn btn-outline-primary me-2 category-btn" onclick="filterProducts('study_materials')">📚 Study Materials</button>
+    </div>
+
+    <div class="row g-4" id="product-grid">
+        {% for p in products %}
+        <div class="col-sm-6 col-lg-3 product-item" data-category="{{ p.category }}" data-product-name="{{ p.name }}">
+            <div class="product-card">
+                <div class="product-image text-center py-4">
+                    <img src="{{ p.image }}" alt="{{ p.name }}" style="max-width: 100%; max-height: 150px; object-fit: contain;">
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between">
+                        <small class="muted">{{ p.store }}</small>
+                        <span class="rating">★ {{ p.rating }}</span>
+                    </div>
+                    <h6 class="mt-2">{{ p.name }}</h6>
+                    <strong>R{{ "%.0f"|format(p.price) }}</strong>
+                    <small class="d-block muted">
+                        Shipping:
+                        {% if p.shipping == 0 %} Free {% else %} R{{ p.shipping }} {% endif %}
+                    </small>
+                    {% if session.get("user_id") %}
+                    <form method="post" action="{{ url_for('favourite', product_id=p['id']) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger mt-2 w-100" type="submit">
+                            {% if p['id'] in favourites %} ❤️ Remove {% else %} ♡ Add to Favourites {% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ url_for('search', q=p.name, budget=10000) }}" class="btn btn-sm btn-outline-secondary mt-2 w-100">View Budget Options</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- JAVASCRIPT AT THE VERY BOTTOM -->
+<script>
+    function filterProducts(category) {
+        var items = document.querySelectorAll('.product-item');
+        var seenNames = new Set(); 
+
+        items.forEach(function(item) {
+            var itemCategory = item.getAttribute('data-category');
+            var itemName = item.getAttribute('data-product-name');
+            
+            if (category === 'all') {
+                item.style.display = 'block';
+            } else {
+                var isDuplicate = false;
+                if (seenNames.has(itemName)) {
+                    isDuplicate = true;
+                } else {
+                    seenNames.add(itemName);
+                }
+
+                var showByCategory = (itemCategory === category);
+
+                if (isDuplicate || !showByCategory) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        filterProducts('all');
+    });
+</script>
+
+{% endblock %}

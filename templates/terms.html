@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+Terms & Conditions - SmartSpend AI
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .terms-header {
+        background: linear-gradient(135deg, #e0f0ff, #d4e8ff);
+        border-radius: 18px;
+        padding: 30px 40px;
+        margin-bottom: 25px;
+    }
+
+    .terms-header .eyebrow {
+        color: #6d5dfc;
+        font-weight: 800;
+        font-size: 0.75rem;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .terms-header h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0b4a8e;
+        margin-top: 8px;
+        margin-bottom: 6px;
+    }
+
+    .terms-header p {
+        color: #4a7ab5;
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .terms-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5EAF2;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        padding: 32px;
+    }
+
+    .terms-card h2 {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0b4a8e;
+        margin-top: 28px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .terms-card h2:first-of-type {
+        margin-top: 0;
+    }
+
+    .terms-card p,
+    .terms-card li {
+        color: #333;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .terms-card ul {
+        padding-left: 20px;
+        margin-bottom: 12px;
+    }
+
+    .terms-card li {
+        margin-bottom: 6px;
+    }
+
+    .terms-footer-note {
+        background: #f8fafc;
+        border-left: 4px solid #6d5dfc;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-top: 30px;
+        font-size: 13px;
+        color: #4a5568;
+    }
+</style>
+
+<div class="container py-5" style="max-width: 900px;">
+
+    <!-- HEADER -->
+    <div class="terms-header shadow-sm">
+        <span class="eyebrow">LEGAL</span>
+        <h1>Terms &amp; Conditions</h1>
+        <p>Last updated: 2026</p>
+    </div>
+
+    <!-- BODY -->
+    <div class="terms-card">
+
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+            By creating an account on SmartSpend AI, you agree to these Terms &amp; Conditions.
+            If you do not agree with any part of these terms, please do not use the service.
+        </p>
+
+        <h2>2. Purpose of the Service</h2>
+        <p>
+            SmartSpend AI is an AI-powered budgeting assistant designed to help students
+            compare products and manage their monthly spending. It is an educational project
+            and is <strong>not</strong> a financial advisor. Any suggestions or product
+            recommendations are informational only.
+        </p>
+
+        <h2>3. Account Responsibilities</h2>
+        <ul>
+            <li>You must provide accurate information when registering.</li>
+            <li>You are responsible for keeping your password secure.</li>
+            <li>You must not attempt to impersonate other users.</li>
+            <li>You must not attempt to escalate your account privileges.</li>
+            <li>You must not attempt to access other users' data.</li>
+        </ul>
+
+        <h2>4. Data and Privacy</h2>
+        <p>
+            We collect your name, email, and budgeting preferences to provide personalised
+            recommendations. In compliance with the
+            <strong>Protection of Personal Information Act (POPIA)</strong>, we process your
+            personal information only for the purposes stated above.
+        </p>
+        <p>
+            We <strong>do not</strong> sell your data to third parties.
+            You have the right to request deletion of your account at any time.
+        </p>
+
+        <h2>5. Limitations of Liability</h2>
+        <p>
+            SmartSpend AI is provided "as is" without warranty of any kind. We are not liable
+            for any financial losses, incorrect product information, or damages resulting
+            from the use of the service.
+        </p>
+
+        <h2>6. Changes to Terms</h2>
+        <p>
+            We may update these Terms periodically. Continued use of the service after
+            changes implies acceptance of the updated Terms.
+        </p>
+
+        <h2 id="privacy">7. Privacy Policy</h2>
+        <p>
+            Your personal information is stored securely and used exclusively to deliver the
+            SmartSpend AI service. We use hashed passwords, CSRF protection, and session
+            security to keep your data safe.
+        </p>
+
+        <h2>8. Contact</h2>
+        <p>
+            For any questions about these Terms, please contact the SmartSpend AI team
+            through your DUT student portal.
+        </p>
+
+        <!-- FOOTER NOTE -->
+        <div class="terms-footer-note">
+            <strong>Note:</strong> This page is part of a DUT student project and is used
+            for educational purposes only.
+        </div>
+
+    </div>
+
+    
+    <div class="text-center mt-4">
+        <a href="{{ url_for('register') }}" class="btn btn-outline-secondary">
+            ← Back to Register
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

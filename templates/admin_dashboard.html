@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+Admin Dashboard - SmartSpend AI
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1 class="fw-bold">Admin Dashboard</h1>
+            <p class="text-muted">Welcome back, {{ session.name }}!</p>
+        </div>
+    </div>
+
+    
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="stat-card stat-card-blue">
+                <div class="stat-icon stat-icon-blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="fw-bold text-primary mb-1">{{ users|length }}</h3>
+                <p class="text-muted mb-0 small">Total Users</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card stat-card-green">
+                <div class="stat-icon stat-icon-green">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 class="fw-bold text-success mb-1">{{ total_students }}</h3>
+                <p class="text-muted mb-0 small">Students</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card stat-card-amber">
+                <div class="stat-icon stat-icon-amber">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h3 class="fw-bold text-warning mb-1">{{ total_store_managers }}</h3>
+                <p class="text-muted mb-0 small">Store Managers</p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card stat-card-rose">
+                <div class="stat-icon stat-icon-rose">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="fw-bold text-danger mb-1">{{ total_admins }}</h3>
+                <p class="text-muted mb-0 small">Admins</p>
+            </div>
+        </div>
+
+    </div>
+
+    
+    <div class="row g-4 mb-4 justify-content-center">
+
+        <div class="col-md-4">
+            <div class="stat-card stat-card-rose">
+                <div class="stat-icon stat-icon-rose">
+                    <!-- ⭐ Free icon instead of fa-money-bill-trend-up -->
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h2 class="fw-bold text-danger mb-1">R{{ "%.2f"|format(total_spent) }}</h2>
+                <p class="text-muted mb-0 small fw-semibold">Platform-Wide Spending</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card stat-card-amber">
+                <div class="stat-icon stat-icon-amber">
+                    <!-- ⭐ Free icon instead of fa-chart-simple -->
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="fw-bold text-warning mb-1">R{{ "%.2f"|format(avg_spent) }}</h2>
+                <p class="text-muted mb-0 small fw-semibold">Average Per Student</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card stat-card-slate">
+                <div class="stat-icon stat-icon-slate">
+                    <!-- ⭐ Free icon instead of fa-boxes-stacked -->
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h2 class="fw-bold text-secondary mb-1">{{ total_products }}</h2>
+                <p class="text-muted mb-0 small fw-semibold">Total Products</p>
+            </div>
+        </div>
+
+    </div>
+
+    
+    <div class="row g-3 mb-4 justify-content-center">
+
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_users') }}" class="text-decoration-none">
+                <div class="card shadow-sm p-4 text-center h-100 hover-card">
+                    <div style="background:#ede9fe;color:#6d28d9;width:64px;height:64px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="mt-3 mb-1">Manage Users</h5>
+                    <p class="text-muted small mb-0">View, edit, delete users</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_stats') }}" class="text-decoration-none">
+                <div class="card shadow-sm p-4 text-center h-100 hover-card">
+                    <div style="background:#e6f4ea;color:#1e7e34;width:64px;height:64px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="mt-3 mb-1">View Reports</h5>
+                    <p class="text-muted small mb-0">System statistics</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_view_products') }}" class="text-decoration-none">
+                <div class="card shadow-sm p-4 text-center h-100 hover-card">
+                    <div style="background:#fef3c7;color:#f59e0b;width:64px;height:64px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto;">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <h5 class="mt-3 mb-1">View Products</h5>
+                    <p class="text-muted small mb-0">Browse the full product catalog</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    
+    <div class="card shadow-sm p-4 mt-4">
+        <h4 class="mb-3">
+            <i class="fas fa-sync-alt me-2"></i> Recent Activity
+        </h4>
+
+        {% if recent_searches %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Product Searched</th>
+                            <th>Budget Set</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for search in recent_searches %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {% if search.name %}
+                                            {{ search.name }} {{ search.surname }}
+                                        {% else %}
+                                            User #{{ search.user_id }}
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                                <td>
+                                    {% if search.role == 'admin' %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% elif search.role == 'store_manager' %}
+                                        <span class="badge bg-warning text-dark">Store Manager</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Student</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ search.query or "General Search" }}</td>
+                                <td>
+                                    {% if search.budget %}
+                                        R{{ "%.2f"|format(search.budget) }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ search.created_at }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No recent activity.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    }
+</style>
+
+{% endblock %}

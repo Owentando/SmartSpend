@@ -1,0 +1,1400 @@
+{% extends "base.html" %}
+
+{% block title %}
+SmartShop AI - Student Budget Dashboard
+{% endblock %}
+
+<!-- ✅ NO background photo on dashboard -->
+{% block body_class %}bg-plain{% endblock %}
+
+{% block content %}
+
+<!-- BACK-IN-STOCK MODAL -->
+{% if back_in_stock_alerts %}
+<div class="modal fade"
+     id="backInStockModal"
+     tabindex="-1"
+     aria-labelledby="backInStockModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+
+            <div class="modal-header bg-success text-white rounded-top-4">
+                <h5 class="modal-title" id="backInStockModalLabel">
+                    🔔 Good news!
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <p class="mb-3">
+                    The item{% if back_in_stock_alerts|length > 1 %}s{% endif %}
+                    you wanted {% if back_in_stock_alerts|length > 1 %}are{% else %}is{% endif %}
+                    back in stock:
+                </p>
+
+                <ul class="list-unstyled mb-0">
+                    {% for alert in back_in_stock_alerts %}
+                    <li class="d-flex align-items-center mb-2">
+                        <span class="text-success me-2">✅</span>
+                        <strong>{{ alert['product_name'] }}</strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="modal-footer border-0">
+                <form method="POST"
+                      action="{{ url_for('dismiss_stock_alerts') }}"
+                      class="w-100">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                            class="btn btn-success w-100 py-2 rounded-3">
+                        ✓ Got it
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<style>
+    
+    .text-rose  { color: #BE123C !important; }
+    .text-green { color: #166534 !important; }
+
+    
+    .smartshop-header {
+        background: linear-gradient(135deg, #e0f0ff, #d4e8ff);
+        border-radius: 18px;
+        padding: 25px 35px;
+        margin-bottom: 25px;
+    }
+
+    .smartshop-header h1 {
+        font-size: 30px;
+        font-weight: 800;
+        color: #0b4a8e;
+        margin-bottom: 5px;
+    }
+
+    .smartshop-header h4 {
+        font-size: 16px;
+        color: #0b4a8e;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .smartshop-header p {
+        color: #4a7ab5;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+
+    
+    .dash-stat {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5EAF2;
+        border-top: 4px solid #cbd5e1;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        padding: 22px;
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .dash-stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
+    }
+
+    .dash-stat-blue   { border-top-color: #3B82F6; }
+    .dash-stat-purple { border-top-color: #8B5CF6; }
+    .dash-stat-green  { border-top-color: #10B981; }
+    .dash-stat-amber  { border-top-color: #F59E0B; }
+    .dash-stat-rose   { border-top-color: #E11D48; }
+
+    .dash-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+    .dash-icon-blue   { background: #E0EDFF; color: #1D4ED8; }
+    .dash-icon-purple { background: #EDE9FE; color: #6D28D9; }
+    .dash-icon-green  { background: #DCFCE7; color: #166534; }
+    .dash-icon-amber  { background: #FEF3C7; color: #B45309; }
+    .dash-icon-rose   { background: #FFE4E6; color: #BE123C; }
+
+    .dash-label {
+        font-size: 13px;
+        color: #6d7485;
+        font-weight: 600;
+    }
+    .dash-value {
+        font-weight: 800;
+        margin-top: 6px;
+        font-size: 26px;
+    }
+    .dash-value-blue   { color: #1D4ED8; }
+    .dash-value-purple { color: #6D28D9; }
+    .dash-value-green  { color: #166534; }
+    .dash-value-rose   { color: #BE123C; }
+
+    .dash-subtext {
+        font-size: 11px;
+        color: #6d7485;
+        margin-top: 4px;
+    }
+
+
+    /* ---- Section headers ---- */
+    .section-title-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        margin-top: 10px;
+    }
+    .section-title-custom h2 {
+        font-size: 20px;
+        color: #0b4a8e;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        margin: 0;
+    }
+    .section-title-custom a {
+        color: #1877f2;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+
+    
+    .category-card {
+        background: white;
+        border-radius: 16px !important;
+        padding: 20px 15px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        border: 2px solid transparent;
+        height: 100%;
+        width: 100%;
+        min-height: 150px;
+    }
+
+    .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
+    }
+
+    .category-selected {
+        border: 2px solid #1877f2 !important;
+        background: #eef5ff !important;
+    }
+
+    .category-card img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 8px;
+        border-radius: 8px;
+    }
+
+    .cat-fallback-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 30px;
+        margin: 0 auto 8px;
+    }
+    .cat-food .cat-fallback-icon { background-color: #e74c3c; }
+    .cat-toiletries .cat-fallback-icon { background-color: #3498db; }
+    .cat-personal_care .cat-fallback-icon { background-color: #9b59b6; }
+    .cat-clothing .cat-fallback-icon { background-color: #1abc9c; }
+    .cat-study_materials .cat-fallback-icon { background-color: #f39c12; }
+
+    .category-card strong {
+        font-size: 15px;
+        font-weight: 800;
+        color: #172033;
+        margin-top: 5px;
+    }
+    .category-card small {
+        font-size: 11px;
+        color: #6d7485;
+        line-height: 1.3;
+    }
+
+
+    
+    #shoppingFormCard {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .option-box {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
+
+    .product-help {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 12px 15px;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+
+    .required-star { color: #dc3545; }
+
+
+    /* ---- Sale filter box ---- */
+    .sale-filter-box {
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+    }
+
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+        .smartshop-header { padding: 20px; }
+        .smartshop-header h1 { font-size: 24px; }
+    }
+</style>
+
+
+<div class="container mt-4 mb-5">
+
+    
+    <div class="smartshop-header shadow-sm">
+        <div>
+            <span class="badge bg-primary mb-2">DUT STUDENT ESSENTIALS</span>
+            <h1>👋 Welcome{% if user and user['name'] %}, {{ user['name'] }}{% endif %}</h1>
+            <h4>Your smart shopping assistant</h4>
+            <p>Shop smart • Stay within budget • Achieve your goals</p>
+        </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- 📋 HERO: "Plan My Budget Basket" — moved to the top           -->
+    <!-- ============================================================ -->
+    <div class="card border-0 shadow-sm p-4 rounded-4 mb-4"
+         style="background: linear-gradient(135deg, #eef5ff, #e0edff);
+                border-left: 5px solid #1877f2 !important;">
+
+        <div class="d-flex align-items-center mb-3">
+            <div style="font-size: 32px; margin-right: 12px;">📋</div>
+            <div>
+                <h5 class="mb-0 fw-bold" style="color: #0b4a8e;">
+                    Plan My Budget Basket
+                </h5>
+                <small class="text-muted">
+                    Enter any amount and we'll plan a basket that fits —
+                    as close to your budget as possible, never over.
+                </small>
+            </div>
+        </div>
+
+        <form method="GET"
+              action="{{ url_for('affordable_products') }}"
+              class="row g-2 align-items-end">
+
+            <div class="col-md-5">
+                <label for="affordableBudget" class="form-label small fw-bold">
+                    Your Budget (R)
+                </label>
+                <input type="number"
+                       class="form-control form-control-lg"
+                       id="affordableBudget"
+                       name="budget"
+                       min="1"
+                       step="0.01"
+                       value="{{ '%.2f'|format(user['budget']) }}"
+                       placeholder="e.g. 500"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="affordableArea" class="form-label small fw-bold">
+                    📍 Your Location
+                </label>
+                <select class="form-select form-select-lg"
+                        id="affordableArea"
+                        name="area">
+                    {% for area in areas %}
+                        <option value="{{ area.key }}">{{ area.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    💰 Fit My Budget
+                </button>
+            </div>
+
+        </form>
+
+        <small class="text-muted d-block mt-2">
+            💡 Tip: Pick your location and we'll charge the correct transport fee.
+        </small>
+
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- STATS ROW — 3 cards centred                                   -->
+    <!-- ============================================================ -->
+    <div class="row g-4 mb-4 justify-content-center">
+
+        <!-- My Monthly Budget -->
+        <div class="col-md-4">
+            <div class="dash-stat dash-stat-blue">
+                <div class="dash-icon dash-icon-blue"><i class="fa-solid fa-wallet"></i></div>
+                <div class="dash-label">My Monthly Budget</div>
+                <div class="dash-value dash-value-blue">R{{ "%.2f"|format(user['budget']) }}</div>
+                <div class="dash-subtext">Your set monthly limit</div>
+            </div>
+        </div>
+
+        <!-- Total Spent -->
+        <div class="col-md-4">
+            <div class="dash-stat dash-stat-purple">
+                <div class="dash-icon dash-icon-purple"><i class="fa-solid fa-list-ul"></i></div>
+                <div class="dash-label">Total Spent</div>
+                <div class="dash-value dash-value-purple">R{{ "%.2f"|format(total_spent) }}</div>
+                <div class="dash-subtext">Your recorded purchases</div>
+            </div>
+        </div>
+
+        <!-- Remaining Budget -->
+        <div class="col-md-4">
+            <div class="dash-stat {% if remaining_budget < 0 %}dash-stat-rose{% else %}dash-stat-green{% endif %}">
+                <div class="dash-icon {% if remaining_budget < 0 %}dash-icon-rose{% else %}dash-icon-green{% endif %}">
+                    <i class="fa-solid fa-piggy-bank"></i>
+                </div>
+                <div class="dash-label">Remaining Budget</div>
+                <div class="dash-value {% if remaining_budget < 0 %}dash-value-rose{% else %}dash-value-green{% endif %}">
+                    R{{ "%.2f"|format(remaining_budget) }}
+                </div>
+                <div class="dash-subtext">Available for purchases</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    
+    <div class="section-title-custom">
+        <h2><i class="fa-solid fa-users"></i> Student Budgeting Categories</h2>
+    </div>
+
+    <div class="row g-3 mb-5">
+
+        <div class="col-6 col-md-4 col-xl">
+            <button type="button"
+                    class="category-card cat-food"
+                    data-category-card="food"
+                    onclick="chooseCategory('food')">
+                <img src="{{ url_for('static', filename='images/food.jpg') }}"
+                     alt="Food"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="cat-fallback-icon"><i class="fa-solid fa-utensils"></i></div>
+                <strong>Food</strong>
+                <small>Rice, bread, oil and more</small>
+            </button>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl">
+            <button type="button"
+                    class="category-card cat-toiletries"
+                    data-category-card="toiletries"
+                    onclick="chooseCategory('toiletries')">
+                <img src="{{ url_for('static', filename='images/toiletries.jpg') }}"
+                     alt="Toiletries"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="cat-fallback-icon"><i class="fa-solid fa-pump-soap"></i></div>
+                <strong>Toiletries</strong>
+                <small>Soap, toothpaste and more</small>
+            </button>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl">
+            <button type="button"
+                    class="category-card cat-personal_care"
+                    data-category-card="personal_care"
+                    onclick="chooseCategory('personal_care')">
+                <img src="{{ url_for('static', filename='images/personal_care.jpg') }}"
+                     alt="Personal Care"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="cat-fallback-icon"><i class="fa-solid fa-spray-can-sparkles"></i></div>
+                <strong>Personal Care</strong>
+                <small>Lotion, shampoo and more</small>
+            </button>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl">
+            <button type="button"
+                    class="category-card cat-clothing"
+                    data-category-card="clothing"
+                    onclick="chooseCategory('clothing')">
+                <img src="{{ url_for('static', filename='images/clothing.jpg') }}"
+                     alt="Clothing"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="cat-fallback-icon"><i class="fa-solid fa-shirt"></i></div>
+                <strong>Clothing</strong>
+                <small>Shoes, jackets and clothes</small>
+            </button>
+        </div>
+
+        <div class="col-12 col-md-4 col-xl">
+            <button type="button"
+                    class="category-card cat-study_materials"
+                    data-category-card="study_materials"
+                    onclick="chooseCategory('study_materials')">
+                <img src="{{ url_for('static', filename='images/study_materials.jpg') }}"
+                     alt="Study Materials"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="cat-fallback-icon"><i class="fa-solid fa-book-open"></i></div>
+                <strong>Study Materials</strong>
+                <small>Calculators and exercise books</small>
+            </button>
+        </div>
+
+    </div>
+
+
+    
+    <div class="card shadow-sm border-0 p-4 mb-5 rounded-4"
+         id="shoppingFormCard">
+
+        <div class="d-flex align-items-center mb-2">
+            <div>
+                <h2 class="mb-0">AI Shopping Assistant</h2>
+                <small class="text-muted">
+                    Choose exactly what you want. We will compare affordable options for you.
+                </small>
+            </div>
+        </div>
+
+        <hr>
+
+        <form method="POST"
+              action="{{ url_for('search_products') }}"
+              id="shoppingSearchForm">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+            
+            <div class="mb-3">
+                <label for="product_category" class="form-label">
+                    <strong>1. What are you looking for?</strong>
+                </label>
+                <select class="form-select form-select-lg"
+                        id="product_category"
+                        name="product_category">
+                    <option value="">-- Select a category --</option>
+                    <option value="food">Food</option>
+                    <option value="toiletries">Toiletries</option>
+                    <option value="personal_care">Personal Care</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="study_materials">Study Materials</option>
+                </select>
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="product_type" class="form-label">
+                    <strong>2. Product Type <span class="text-muted">(Optional)</span></strong>
+                </label>
+                <select class="form-select form-select-lg"
+                        id="product_type"
+                        name="product_type">
+                    <option value="">All products in this category</option>
+                </select>
+                <input type="hidden" id="product_name" name="product_name" value="">
+                <div class="product-help text-muted">
+                    Product type is optional. Leave it as "All products" to see all available products, or choose a type to narrow the search.
+                </div>
+            </div>
+
+            
+            <div id="brandSection" class="option-box" style="display:none;">
+                <label for="brand" class="form-label fw-bold">Choose a Brand</label>
+                <select class="form-select" id="brand" name="brand">
+                    <option value="">-- Any brand --</option>
+                </select>
+            </div>
+
+            
+            <div id="variantSection" class="option-box" style="display:none;">
+                <label for="variant" class="form-label fw-bold">Choose a Variant</label>
+                <select class="form-select" id="variant" name="variant">
+                    <option value="">-- Any variant --</option>
+                </select>
+            </div>
+
+            
+            <div id="productSizeSection" class="option-box" style="display:none;">
+                <label for="product_size" class="form-label fw-bold">Choose Size / Volume</label>
+                <select class="form-select" id="product_size" name="product_size">
+                    <option value="">-- Select size --</option>
+                </select>
+            </div>
+
+            
+            <div id="exerciseSizeSection" class="option-box" style="display:none;">
+                <label for="exercise_size" class="form-label fw-bold">Choose Exercise Book Size</label>
+                <select class="form-select" id="exercise_size" name="exercise_size">
+                    <option value="">-- Select size --</option>
+                    <option value="32 pages">32 pages</option>
+                    <option value="48 pages">48 pages</option>
+                    <option value="72 pages">72 pages</option>
+                    <option value="1 Quire">1 Quire</option>
+                    <option value="2 Quire">2 Quire</option>
+                    <option value="3 Quire">3 Quire</option>
+                </select>
+            </div>
+
+            
+            <div id="clothingSizeSection" class="option-box" style="display:none;">
+                <label for="clothing_size" class="form-label fw-bold">Choose Clothing Size</label>
+                <select class="form-select" id="clothing_size" name="clothing_size">
+                    <option value="">Any clothing size</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                </select>
+            </div>
+
+            
+            <div id="shoeSizeSection" class="option-box" style="display:none;">
+                <label for="shoe_size" class="form-label fw-bold">Choose Shoe Size</label>
+                <select class="form-select" id="shoe_size" name="shoe_size">
+                    <option value="">Any shoe size</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                </select>
+            </div>
+
+            
+            <div id="colourSection" class="option-box" style="display:none;">
+                <label for="colour" class="form-label fw-bold">Choose Colour</label>
+                <select class="form-select" id="colour" name="colour">
+                    <option value="">Any colour</option>
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="blue">Blue</option>
+                    <option value="red">Red</option>
+                    <option value="green">Green</option>
+                    <option value="pink">Pink</option>
+                    <option value="grey">Grey</option>
+                    <option value="brown">Brown</option>
+                    <option value="beige">Beige</option>
+                    <option value="navy">Navy</option>
+                </select>
+                <small class="text-muted">Colour is only used for clothing and shoes.</small>
+            </div>
+
+            
+            <div class="sale-filter-box">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="only_sale"
+                           name="only_sale"
+                           value="1">
+                    <label class="form-check-label fw-bold" for="only_sale">
+                        🏷️ Only show items on sale
+                    </label>
+                </div>
+                <small class="text-muted">
+                    Tick this to see only products with an active discount.
+                </small>
+            </div>
+
+            <!-- BUDGET -->
+            <div class="mb-3">
+                <label for="budget" class="form-label">
+                    <strong>3. Maximum Budget (R)</strong>
+                    <span class="required-star">*</span>
+                </label>
+                <input type="number"
+                       class="form-control form-control-lg"
+                       id="budget"
+                       name="budget"
+                       value="{{ "%.2f"|format(user['budget']) }}"
+                       min="0"
+                       step="0.01"
+                       required>
+                <div class="form-text">
+                    SmartShop AI will use this amount when comparing products.
+                </div>
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="radius" class="form-label">
+                    <strong>Search Radius</strong>
+                </label>
+                <select class="form-select" id="radius" name="radius">
+                    <option value="5">Within 5 km</option>
+                    <option value="10">Within 10 km</option>
+                    <option value="25" selected>Within 25 km</option>
+                    <option value="50">Within 50 km</option>
+                    <option value="100">Within 100 km</option>
+                </select>
+                <small class="text-muted">Find products within your selected distance.</small>
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="shipping" class="form-label">
+                    <strong>Shipping Preference</strong>
+                </label>
+                <select class="form-select" id="shipping" name="shipping">
+                    <option value="any">Any shipping option</option>
+                    <option value="free">Free shipping only</option>
+                    <option value="low">Low shipping (under R50)</option>
+                </select>
+            </div>
+
+            <!-- SORT -->
+            <div class="mb-4">
+                <label for="sort" class="form-label">
+                    <strong>Sort Results</strong>
+                </label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="low_to_high">Price: Lowest to Highest</option>
+                    <option value="match">Best AI Match</option>
+                    <option value="rating">Highest Rating</option>
+                    <option value="high_to_low">Price: Highest to Lowest</option>
+                </select>
+            </div>
+
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                Find the Best Value for Me
+            </button>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    SmartShop AI compares your selected product, brand,
+                    variant, size, colour, budget, distance and shipping.
+                </small>
+            </div>
+
+        </form>
+
+    </div>
+
+
+    
+    <div class="card shadow-sm p-4 mb-4 border-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h3 class="mb-0">Your Budget Plan</h3>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('download_budget_pdf') }}"
+                   class="btn btn-outline-primary btn-sm">
+                    Download PDF
+                </a>
+                {% if history %}
+                <form method="POST"
+                      action="{{ url_for('clear_budget_plan') }}"
+                      onsubmit="return confirm('Clear your entire budget plan? This cannot be undone.');">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        Clear All
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if history %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history %}
+                            <tr>
+                                <td>{{ item['product_name'] }}</td>
+                                <td>R{{ "%.2f"|format(item['price']) }}</td>
+                                <td>{{ item['created_at'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">
+                Your budget plan is empty.
+                Use SmartShop AI above to find affordable products.
+            </p>
+        {% endif %}
+
+    </div>
+
+
+    
+    <div class="card shadow-sm p-4 mb-4 border-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h3 class="mb-0">Your Recent Searches</h3>
+            {% if search_history %}
+            <form method="POST"
+                  action="{{ url_for('clear_search_history') }}"
+                  onsubmit="return confirm('Clear your entire search history?');">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    Clear All
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if search_history %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Search Query</th>
+                            <th>Budget</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in search_history %}
+                            <tr>
+                                <td>{{ item['query'] or "General Search" }}</td>
+                                <td>
+                                    {% if item['budget'] %}
+                                        R{{ "%.2f"|format(item['budget']) }}
+                                    {% else %}
+                                        Any
+                                    {% endif %}
+                                </td>
+                                <td>{{ item['created_at'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">
+                You haven't searched for anything yet.
+            </p>
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<script>
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    const modalEl = document.getElementById("backInStockModal");
+    if (modalEl && typeof bootstrap !== "undefined") {
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: "static",
+            keyboard: false
+        });
+        modal.show();
+    }
+});
+
+
+
+const studentProducts = {
+
+    food: {
+        rice: {
+            label: "Rice",
+            brands: ["Aunt Caroline", "Spekko", "Golden Delight", "Tastic"],
+            sizes: ["2kg", "5kg"]
+        },
+        bread: {
+            label: "Bread",
+            brands: ["Sasko", "Albany", "Blue Ribbon"],
+            variants: ["White", "Brown"]
+        },
+        oil: {
+            label: "Cooking Oil",
+            brands: ["Sunflower", "Delight"],
+            sizes: ["750ml", "2L"]
+        },
+        maize_meal: {
+            label: "Maize Meal",
+            brands: ["Aces", "White Star", "Iwisa"],
+            sizes: ["2.5kg", "5kg"]
+        },
+        milk: {
+            label: "Milk",
+            brands: ["Clover", "Parmalat"],
+            sizes: ["1L", "2L"],
+            variants: ["Full Cream", "Low Fat"]
+        },
+        sugar: {
+            label: "Sugar",
+            brands: ["Selati", "Huletts"],
+            sizes: ["2kg", "5kg"]
+        },
+        chicken: {
+            label: "Chicken",
+            brands: ["Country Bird"],
+            sizes: ["1kg", "2kg"]
+        },
+        beef: {
+            label: "Beef",
+            brands: ["Farm Fresh"],
+            sizes: ["500g", "1kg"]
+        },
+        pork: {
+            label: "Pork",
+            brands: ["Farm Fresh"],
+            sizes: ["500g"]
+        },
+        lamb: {
+            label: "Lamb",
+            brands: ["Farm Fresh"],
+            sizes: ["1kg"]
+        },
+        tomatoes: {
+            label: "Tomatoes",
+            brands: ["Fresh Pick"],
+            sizes: ["250g", "500g", "1kg"]
+        },
+        potatoes: {
+            label: "Potatoes",
+            brands: ["Fresh Pick"],
+            sizes: ["1kg", "2kg", "5kg"]
+        },
+        onions: {
+            label: "Onions",
+            brands: ["Fresh Pick"],
+            sizes: ["2kg", "5kg"]
+        },
+        cabbage: {
+            label: "Cabbage",
+            brands: ["Fresh Pick"],
+            sizes: ["1kg"]
+        },
+        spinach: {
+            label: "Spinach",
+            brands: ["Fresh Pick"],
+            sizes: ["250g"]
+        },
+        carrots: {
+            label: "Carrots",
+            brands: ["Fresh Pick"],
+            sizes: ["1kg"]
+        },
+        broccoli: {
+            label: "Broccoli",
+            brands: ["Fresh Pick"],
+            sizes: ["250g"]
+        },
+        cauliflower: {
+            label: "Cauliflower",
+            brands: ["Fresh Pick"],
+            sizes: ["500g"]
+        },
+        bananas: {
+            label: "Bananas",
+            brands: ["Fresh Pick"],
+            sizes: ["1kg"]
+        },
+        apples: {
+            label: "Apples",
+            brands: ["Fresh Pick"],
+            sizes: ["1kg"]
+        },
+        oranges: {
+            label: "Oranges",
+            brands: ["Fresh Pick"],
+            sizes: ["1.5kg"]
+        },
+        grapes: {
+            label: "Grapes",
+            brands: ["Fresh Pick"],
+            sizes: ["500g"]
+        },
+        strawberries: {
+            label: "Strawberries",
+            brands: ["Fresh Pick"],
+            sizes: ["250g"]
+        },
+        eggs: {
+            label: "Eggs",
+            brands: ["Fresh Farm"],
+            sizes: ["6 Pack", "12 Pack", "30 Pack"]
+        },
+        cheese: {
+            label: "Cheese",
+            brands: ["Fresh Farm"],
+            sizes: ["250g", "500g"]
+        },
+        butter: {
+            label: "Butter / Margarine",
+            brands: ["Clover"],
+            sizes: ["250g", "500g"]
+        },
+        flour: {
+            label: "Flour",
+            brands: ["Snowflake"],
+            sizes: ["2.5kg", "5kg"]
+        },
+        tinned: {
+            label: "Tinned Food",
+            brands: ["KOO", "Ocean"],
+            sizes: ["70g", "185g", "410g"]
+        },
+        pasta: {
+            label: "Pasta & Noodles",
+            brands: ["Golden Cloud", "Indomie"],
+            sizes: ["70g", "500g", "5 Pack"]
+        }
+    },
+
+    toiletries: {
+        soap: {
+            label: "Soap",
+            brands: ["Dettol", "Sunlight", "Dove", "Lifebuoy"]
+        },
+        toothpaste: {
+            label: "Toothpaste",
+            brands: ["Colgate", "Aquafresh", "Sensodyne"]
+        },
+        toilet_paper: {
+            label: "Toilet Paper",
+            brands: ["Twinsaver", "Baby Soft"],
+            sizes: ["9 Pack", "12 Pack"]
+        },
+        washing_powder: {
+            label: "Washing Powder",
+            brands: ["OMO", "Ariel"],
+            sizes: ["2kg", "5kg"]
+        },
+        dishwashing: {
+            label: "Dishwashing Liquid",
+            brands: ["Sunlight"],
+            sizes: ["500ml", "1L"]
+        },
+        sanitizer: {
+            label: "Hand Sanitizer",
+            brands: ["Dettol"],
+            sizes: ["500ml", "1L"]
+        }
+    },
+
+    personal_care: {
+        lotion: {
+            label: "Body Lotion",
+            brands: ["Clere", "Nivea", "Vaseline"],
+            sizes: ["250ml", "500ml"]
+        },
+        shampoo: {
+            label: "Shampoo",
+            brands: ["Pantene", "Tresemme", "Dove", "Head & Shoulders"]
+        },
+        deodorant: {
+            label: "Deodorant",
+            brands: ["Dove", "Shield"]
+        }
+    },
+
+    clothing: {
+        shoes: {
+            label: "Shoes",
+            brands: ["Nike", "Adidas", "Puma", "Skechers"],
+            shoe: true,
+            colour: true
+        },
+        jacket: {
+            label: "Jacket",
+            brands: ["Urban Wear"],
+            clothing: true,
+            colour: true
+        },
+        hoodie: {
+            label: "Hoodie",
+            brands: ["Urban Wear"],
+            clothing: true,
+            colour: true
+        },
+        tshirt: {
+            label: "T-Shirt",
+            brands: ["Campus Fashion"],
+            clothing: true,
+            colour: true
+        },
+        jeans: {
+            label: "Jeans",
+            brands: ["Campus Fashion"],
+            clothing: true,
+            colour: true
+        },
+        dress: {
+            label: "Dress",
+            brands: ["Urban Wear"],
+            clothing: true,
+            colour: true
+        },
+        scarf: {
+            label: "Scarf",
+            brands: ["Urban Wear"],
+            clothing: true,
+            colour: true
+        }
+    },
+
+    study_materials: {
+        calculator: {
+            label: "Calculator",
+            brands: ["Casio", "Sharp"]
+        },
+        exercise_book: {
+            label: "Exercise Book",
+            exercise: true
+        },
+        notebook: {
+            label: "Notebook",
+            brands: ["Student Choice"]
+        },
+        textbook: {
+            label: "Textbook",
+            brands: ["DUT Bookshop"]
+        },
+        pen: {
+            label: "Pens",
+            brands: ["Student Choice"]
+        },
+        geometry: {
+            label: "Geometry Set",
+            brands: ["Student Choice"]
+        },
+        bag: {
+            label: "Bag",
+            brands: ["Student Choice"]
+        }
+    }
+
+};
+
+
+
+const categorySelect = document.getElementById("product_category");
+const productTypeSelect = document.getElementById("product_type");
+const productNameInput = document.getElementById("product_name");
+
+const brandSection = document.getElementById("brandSection");
+const brandSelect = document.getElementById("brand");
+
+const variantSection = document.getElementById("variantSection");
+const variantSelect = document.getElementById("variant");
+
+const productSizeSection = document.getElementById("productSizeSection");
+const productSizeSelect = document.getElementById("product_size");
+
+const exerciseSizeSection = document.getElementById("exerciseSizeSection");
+const exerciseSizeSelect = document.getElementById("exercise_size");
+
+const clothingSizeSection = document.getElementById("clothingSizeSection");
+const shoeSizeSection = document.getElementById("shoeSizeSection");
+const colourSection = document.getElementById("colourSection");
+
+const shoppingForm = document.getElementById("shoppingSearchForm");
+const shoppingFormCard = document.getElementById("shoppingFormCard");
+
+
+function chooseCategory(category) {
+    categorySelect.value = category;
+    updateCategoryCards();
+    updateProductList();
+
+    if (shoppingFormCard) {
+        shoppingFormCard.style.display = "block";
+    }
+
+    shoppingForm.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+
+
+function updateCategoryCards() {
+    document.querySelectorAll("[data-category-card]").forEach(function(card) {
+        card.classList.remove("category-selected");
+        if (card.dataset.categoryCard === categorySelect.value) {
+            card.classList.add("category-selected");
+        }
+    });
+}
+
+
+
+function updateProductList() {
+    const category = categorySelect.value;
+
+    productTypeSelect.innerHTML = '<option value="">All products in this category</option>';
+    clearProductOptions();
+
+    if (!category || !studentProducts[category]) {
+        updateFinalProductName();
+        return;
+    }
+
+    Object.keys(studentProducts[category]).forEach(function(productKey) {
+        const product = studentProducts[category][productKey];
+        const option = document.createElement("option");
+        option.value = productKey;
+        option.textContent = product.label;
+        productTypeSelect.appendChild(option);
+    });
+
+    updateFinalProductName();
+}
+
+
+
+function updateProductOptions() {
+    clearProductOptions();
+
+    const category = categorySelect.value;
+    const product = productTypeSelect.value;
+
+    if (!category || !product || !studentProducts[category] || !studentProducts[category][product]) {
+        updateFinalProductName();
+        return;
+    }
+
+    const data = studentProducts[category][product];
+
+    if (data.brands && data.brands.length > 0) {
+        brandSection.style.display = "block";
+        brandSelect.innerHTML = '<option value="">-- Select a brand --</option>';
+        data.brands.forEach(function(brand) {
+            const option = document.createElement("option");
+            option.value = brand;
+            option.textContent = brand;
+            brandSelect.appendChild(option);
+        });
+    }
+
+    if (data.variants && data.variants.length > 0) {
+        variantSection.style.display = "block";
+        variantSelect.innerHTML = '<option value="">-- Select a variant --</option>';
+        data.variants.forEach(function(variant) {
+            const option = document.createElement("option");
+            option.value = variant;
+            option.textContent = variant;
+            variantSelect.appendChild(option);
+        });
+    }
+
+    if (data.sizes) {
+        productSizeSection.style.display = "block";
+        productSizeSelect.innerHTML = '<option value="">-- Select size --</option>';
+        data.sizes.forEach(function(size) {
+            const option = document.createElement("option");
+            option.value = size;
+            option.textContent = size;
+            productSizeSelect.appendChild(option);
+        });
+    }
+
+    if (data.exercise) {
+        exerciseSizeSection.style.display = "block";
+    }
+
+    if (data.clothing) {
+        clothingSizeSection.style.display = "block";
+        colourSection.style.display = "block";
+    }
+
+    if (data.shoe) {
+        shoeSizeSection.style.display = "block";
+        colourSection.style.display = "block";
+    }
+
+    updateFinalProductName();
+}
+
+
+function clearProductOptions() {
+    brandSection.style.display = "none";
+    variantSection.style.display = "none";
+    productSizeSection.style.display = "none";
+    exerciseSizeSection.style.display = "none";
+    clothingSizeSection.style.display = "none";
+    shoeSizeSection.style.display = "none";
+    colourSection.style.display = "none";
+
+    brandSelect.innerHTML = '<option value="">-- Any brand --</option>';
+    variantSelect.innerHTML = '<option value="">-- Any variant --</option>';
+    productSizeSelect.innerHTML = '<option value="">-- Select size --</option>';
+
+    exerciseSizeSelect.value = "";
+    brandSelect.value = "";
+    variantSelect.value = "";
+    productSizeSelect.value = "";
+
+    document.getElementById("clothing_size").value = "";
+    document.getElementById("shoe_size").value = "";
+    document.getElementById("colour").value = "";
+}
+
+
+
+function updateFinalProductName() {
+    const category = categorySelect.value;
+    const productKey = productTypeSelect.value;
+
+    if (!category || !productKey || !studentProducts[category] || !studentProducts[category][productKey]) {
+        productNameInput.value = "";
+        return;
+    }
+
+    const data = studentProducts[category][productKey];
+    const parts = [data.label];
+
+    if (brandSelect.value) parts.unshift(brandSelect.value);
+    if (variantSelect.value) parts.push(variantSelect.value);
+    if (productSizeSelect.value) parts.push(productSizeSelect.value);
+    if (exerciseSizeSelect.value) parts.push(exerciseSizeSelect.value);
+
+    productNameInput.value = parts.join(" ");
+}
+
+
+
+shoppingForm.addEventListener("submit", function(event) {
+    updateFinalProductName();
+
+    if (!document.getElementById("budget").value) {
+        event.preventDefault();
+        alert("Please enter your budget.");
+        document.getElementById("budget").focus();
+        return;
+    }
+
+    const category = categorySelect.value;
+    const product = productTypeSelect.value;
+    const data = studentProducts[category] && studentProducts[category][product];
+
+    if (data && data.brands && data.brands.length > 0 && !brandSelect.value) {
+        event.preventDefault();
+        alert("Please choose a brand.");
+        brandSelect.focus();
+        return;
+    }
+
+    if (data && data.variants && data.variants.length > 0 && !variantSelect.value) {
+        event.preventDefault();
+        alert("Please choose a variant.");
+        variantSelect.focus();
+        return;
+    }
+
+    if (data && data.sizes && !productSizeSelect.value) {
+        event.preventDefault();
+        alert("Please choose the product size or volume.");
+        productSizeSelect.focus();
+        return;
+    }
+
+    if (data && data.exercise && !exerciseSizeSelect.value) {
+        event.preventDefault();
+        alert("Please choose the exercise book size.");
+        exerciseSizeSelect.focus();
+        return;
+    }
+});
+
+
+
+categorySelect.addEventListener("change", function() {
+    updateCategoryCards();
+    updateProductList();
+
+    if (shoppingFormCard) {
+        shoppingFormCard.style.display = categorySelect.value ? "block" : "none";
+    }
+});
+
+productTypeSelect.addEventListener("change", updateProductOptions);
+brandSelect.addEventListener("change", updateFinalProductName);
+variantSelect.addEventListener("change", updateFinalProductName);
+productSizeSelect.addEventListener("change", updateFinalProductName);
+exerciseSizeSelect.addEventListener("change", updateFinalProductName);
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    updateCategoryCards();
+    updateProductList();
+
+    if (shoppingFormCard && !categorySelect.value) {
+        shoppingFormCard.style.display = "none";
+    }
+});
+
+</script>
+
+{% endblock %}

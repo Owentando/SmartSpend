@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block body_class %}bg-plain{% endblock %}
+
+{% block title %}
+SmartSpend AI - Budget Plan
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container py-5">
+
+    <span class="eyebrow">
+        PERSONAL BUDGETING DATA
+    </span>
+
+    <h1>
+        📋 My Budget Plan
+    </h1>
+
+    <p class="text-muted mb-4">
+        Here is a record of all the items you have allocated in your budget plan.
+    </p>
+
+
+    <div class="panel mt-4">
+
+        {% for item in history %}
+
+        <div class="expense">
+
+            <span>
+
+                <strong>
+                    {{ item['product_name'] }}
+                </strong>
+
+                <br>
+
+                <small>
+                    {{ item['created_at'] }}
+                </small>
+
+            </span>
+
+
+            <strong>
+
+                R{{ "%.2f"|format(item['price']) }}
+
+            </strong>
+
+        </div>
+
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <h3>
+                You have not added anything to your budget plan yet.
+            </h3>
+
+            <p>
+                Products that you save to your budget plan
+                will appear here.
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- BACK BUTTON (at bottom) -->
+    <div class="text-center mt-5">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

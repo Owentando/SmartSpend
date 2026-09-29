@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Product Overview - SmartSpend AI{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .product-thumb {
+        width: 56px; height: 56px; object-fit: cover;
+        border-radius: 10px; border: 1px solid #e5e7eb;
+        background: #f8f9fa; padding: 2px; flex-shrink: 0;
+    }
+    .product-thumb-fallback {
+        width: 56px; height: 56px; border-radius: 10px;
+        background: #eef2f7; color: #64748b;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; border: 1px solid #e5e7eb; flex-shrink: 0;
+    }
+    .category-badge {
+        background: #e9ecef; color: #334155; font-weight: 600;
+        font-size: 11px; padding: 5px 10px; border-radius: 20px;
+        text-transform: capitalize;
+    }
+    .status-badge {
+        font-weight: 600;
+        font-size: 11px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+    /* Status colors — match the actual product status */
+    .status-badge.status-in  { background: #d1f0d8; color: #14532d; }
+    .status-badge.status-low { background: #fef3c7; color: #92400e; }
+    .status-badge.status-out { background: #fee2e2; color: #991b1b; }
+
+    /* ⭐ SALE STYLES */
+    .sale-badge {
+        display: inline-block;
+        background: #ffc107;
+        color: #212529;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    tr.on-sale-row {
+        background: #fffbf0 !important;
+    }
+    .sale-price {
+        color: #dc3545;
+        font-weight: 800;
+    }
+
+    .product-name { font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+    .product-meta { color: #64748b; font-size: 12px; }
+    .table thead.table-dark th {
+        font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+
+    <div class="page-header">
+        <div>
+            <span class="badge bg-info text-dark mb-2">READ-ONLY VIEW</span>
+            <h2 class="fw-bold mb-0"><i class="fas fa-boxes-stacked me-2"></i> Product Overview</h2>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-1"></i> Back to Admin
+        </a>
+    </div>
+
+    <div class="card shadow-sm p-4 border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Transport</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr {% if product['on_sale'] %}class="on-sale-row"{% endif %}>
+                            <td class="text-muted">#{{ product['id'] }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if product['image_url'] %}
+                                        <img src="{{ product['image_url'] }}" alt="{{ product['name'] }}"
+                                             class="product-thumb me-3"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="product-thumb-fallback me-3" style="display:none;"><i class="fas fa-image"></i></div>
+                                    {% else %}
+                                        <div class="product-thumb-fallback me-3"><i class="fas fa-image"></i></div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="product-name">
+                                            {{ product['name'] }}
+                                            {% if product['on_sale'] %}
+                                                <span class="sale-badge">
+                                                    🏷️ {{ "%.0f"|format(product['discount_percent']) }}% OFF
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="product-meta">
+                                            {{ product['brand'] }}{% if product['size'] %} ({{ product['size'] }}){% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-badge">{{ product['category']|replace('_', ' ') }}</span></td>
+
+                            <!-- ⭐ PRICE — shows sale price if on sale -->
+                            <td>
+                                {% if product['on_sale'] %}
+                                    <s class="text-muted">R{{ "%.2f"|format(product['price']) }}</s>
+                                    <span class="sale-price">R{{ "%.2f"|format(product['sale_price']) }}</span>
+                                {% else %}
+                                    <strong>R{{ "%.2f"|format(product['price']) }}</strong>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if product['shipping'] == 0 %}
+                                    <span class="text-success fw-semibold">Free</span>
+                                {% else %}
+                                    R{{ "%.2f"|format(product['shipping']) }}
+                                {% endif %}
+                            </td>
+                            <td><i class="fas fa-star text-warning"></i> {{ product['rating'] }}</td>
+
+                            
+                            <td>
+                                {% if product['status'] == 'In Stock' %}
+                                    <span class="status-badge status-in">In Stock</span>
+                                {% elif product['status'] == 'Low Stock' %}
+                                    <span class="status-badge status-low">Low Stock</span>
+                                {% else %}
+                                    <span class="status-badge status-out">Out of Stock</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
